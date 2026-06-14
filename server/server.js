@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 import { connectRedis } from './config/redis.js';
+import seatRoutes from './routes/seatRoutes.js';
 
 // Load environment variables from the parent directory
 dotenv.config({ path: '../.env' });
@@ -30,10 +31,16 @@ const io = new Server(httpServer, {
   }
 });
 
+// Make io accessible in controllers
+app.set('io', io);
+
 // Health Check Route
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
+
+// API Routes
+app.use('/api/seats', seatRoutes);
 
 // Initialize Databases and Start Server
 const startServer = async () => {
