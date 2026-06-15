@@ -4,11 +4,7 @@ import { acquireLock } from '../services/lockManager.js';
 export const lockSeat = async (req, res) => {
   try {
     const { seatId } = req.params;
-    const { userId } = req.body; // TODO: Replace with req.user.id once Auth is built
-
-    if (!userId) {
-      return res.status(400).json({ message: 'userId is required for testing' });
-    }
+    const userId = req.user.id;
 
     // 1. Seat exists & not 'booked'? (MongoDB check)
     const seat = await Seat.findById(seatId);

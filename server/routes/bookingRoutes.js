@@ -1,9 +1,9 @@
 import express from 'express';
-import { lockSeat } from '../controllers/seatController.js';
+import { confirmBooking } from '../controllers/bookingController.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/:seatId/lock', protect, lockSeat);
+router.post('/confirm', protect, confirmBooking);
 
 export default router;
