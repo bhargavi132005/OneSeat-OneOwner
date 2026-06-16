@@ -11,6 +11,7 @@ import authRoutes from './routes/authRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
 import { startExpireListener } from './services/expireListener.js';
+import { initializeSocket } from './sockets/socketHandler.js';
 
 // Load environment variables from the parent directory
 dotenv.config({ path: '../.env' });
@@ -35,8 +36,8 @@ const io = new Server(httpServer, {
   }
 });
 
-// Make io accessible in controllers
-app.set('io', io);
+// Initialize Socket.io handler (sets singleton, middleware, and rooms)
+initializeSocket(io);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
