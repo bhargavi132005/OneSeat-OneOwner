@@ -1,10 +1,11 @@
 import mongoose from 'mongoose';
-import { nanoid } from 'nanoid';
-import QRCode from 'qrcode';
 import Seat from '../models/Seat.js';
 import Event from '../models/Event.js';
 import Booking from '../models/Booking.js';
-import { verifyLock, releaseLock } from '../services/lockManager.js';
+import { verifyLock, releaseLock } from '../utils/lockManager.js';
+import { generateQRCode } from '../utils/qrGenerator.js';
+import { getIO } from '../config/socket.js';
+import { generateBookingRef } from '../utils/bookingRef.js';
 
 export const confirmBooking = async (req, res) => {
   // Start a MongoDB session for our transaction
@@ -15,46 +16,48 @@ export const confirmBooking = async (req, res) => {
     const { seatId, eventId } = req.body;
     const userId = req.user.id;
 
-    // 1. Verify Redis Lock still exists for this user
+        // verifyLock(eventId, seatId, userId) — lock still exists for this user?
     const hasLock = await verifyLock(eventId, seatId, userId);
     if (!hasLock) {
       await session.abortTransaction();
       return res.status(409).json({ message: 'Lock expired or invalid' });
     }
 
-    // 2. Fetch Seat and Event
-    const seat = await Seat.findById(seatId).session(session);
+        // Double-check seat.status in MongoDB (defence in depth)
+        const seat = await Seat.findById(seatId);
     if (!seat || seat.status === 'booked') {
       await session.abortTransaction();
       return res.status(400).json({ message: 'Seat unavailable' });
     }
-    const event = await Event.findById(eventId).session(session);
 
-    // 3. Update Database (Seat & Event)
-    seat.status = 'booked';
-    await seat.save({ session });
+    const bookingRef = generateBookingRef();
+        
+        // Generate QR code
+        const qrData = JSON.stringify({ bookingRef, eventId, seatId });
+    const qrCode = await generateQRCode(qrData);
 
-    event.availableSeats -= 1;
-    await event.save({ session });
+        // Booking.create([...], { session }) — insert booking record
+        const [booking] = await Booking.create([{ 
+          bookingRef, userId, eventId, seatId, seatLabel: seat.label, status: 'confirmed', qrCode 
+        }], { session });
 
-    // 4. Generate Booking Ref & QR Code
-    const bookingRef = `SEAT-${nanoid(6).toUpperCase()}`;
-    const qrData = JSON.stringify({ bookingRef, seatLabel: seat.label, event: event.title });
-    const qrCode = await QRCode.toDataURL(qrData);
+        // Seat.findByIdAndUpdate(seatId, { status:'booked' }, { session })
+        await Seat.findByIdAndUpdate(seatId, { status: 'booked' }, { session });
 
-    // 5. Create Booking Record
-    const booking = new Booking({ bookingRef, userId, eventId, seatId, seatLabel: seat.label, status: 'confirmed', qrCode });
-    await booking.save({ session });
+        // Event.findByIdAndUpdate(eventId, { $inc:{availableSeats:-1} }, { session })
+        await Event.findByIdAndUpdate(eventId, { $inc: { availableSeats: -1 } }, { session });
 
-    // 6. Commit Transaction
+        // commitTransaction()
     await session.commitTransaction();
 
-    // 7. Clean up Redis Lock & Broadcast success
+        // releaseLock() — delete Redis key
     await releaseLock(eventId, seatId, userId);
-    const io = req.app.get('io');
-    io.to(`event:${eventId}`).emit('seat:booked', { seatId: seat._id });
+        
+        // Emit 'seat:booked' to Socket.io room
+    getIO().to(`event:${eventId}`).emit('seat:booked', { seatId: seat._id });
 
-    return res.json({ success: true, booking });
+        // Return booking object with qrCode base64
+        return res.json({ success: true, booking, qrCode });
   } catch (error) {
     await session.abortTransaction();
     return res.status(500).json({ message: error.message });
