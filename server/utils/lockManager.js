@@ -48,7 +48,7 @@ const RELEASE_LOCK_SCRIPT = `
 
 export const acquireLock = async (eventId, seatId, userId, ttl = 300, maxLocks = 2) => {
   return await redisClient.eval(ACQUIRE_LOCK_SCRIPT, {
-    keys: [`seat:${eventId}:${seatId}`, `userlocks:${userId}`],
+    keys: [`seat:${eventId}:${seatId}`, `userlocks:${eventId}:${userId}`],
     arguments: [userId, ttl.toString(), maxLocks.toString()]
   });
 };
@@ -60,7 +60,7 @@ export const verifyLock = async (eventId, seatId, userId) => {
 
 export const releaseLock = async (eventId, seatId, userId) => {
   const result = await redisClient.eval(RELEASE_LOCK_SCRIPT, {
-    keys: [`seat:${eventId}:${seatId}`, `userlocks:${userId}`],
+    keys: [`seat:${eventId}:${seatId}`, `userlocks:${eventId}:${userId}`],
     arguments: [userId]
   });
   return result === 1;

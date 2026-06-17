@@ -33,8 +33,9 @@ export const lockSeat = async (req, res) => {
     // Emit 'seat:locked' to Socket.io room event:{eventId}
     getIO().to(`event:${eventId}`).emit('seat:locked', { seatId, lockedBy: userId });
 
-    // Return { success: true, expiresAt, seatLabel }
-    const expiresAt = new Date(Date.now() + 120 * 1000); // Standard 120 seconds
+    // Return { success: true, expiresAt, seatLabel }. TTL should match Redis.
+    const LOCK_TTL_SECONDS = 300; // 5 minutes, matching lockManager.js
+    const expiresAt = new Date(Date.now() + LOCK_TTL_SECONDS * 1000);
     return res.status(200).json({ success: true, expiresAt, seatLabel: seat.label });
   } catch (error) {
     return res.status(500).json({ message: error.message });

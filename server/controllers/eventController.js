@@ -1,6 +1,7 @@
 import Event from '../models/Event.js';
 import Seat from '../models/Seat.js';
 import redisClient from '../config/redis.js';
+import { verifyAccess } from '../utils/jwt.js';
 
 export const getEvents = async (req, res) => {
   try {
@@ -26,7 +27,18 @@ export const getEventById = async (req, res) => {
 export const getEventSeats = async (req, res) => {
   try {
     const { id: eventId } = req.params;
-    const userId = req.user.id;
+    
+    // Optionally get user ID if logged in (for "lockedByMe" feature)
+    let userId = null;
+    try {
+      const token = req.cookies?.accessToken || req.headers.authorization?.split(' ')[1];
+      if (token) {
+        const decoded = verifyAccess(token);
+        userId = decoded.userId;
+      }
+    } catch (err) {
+      // Ignore invalid/missing tokens for public access
+    }
 
     const seats = await Seat.find({ eventId }).lean();
     
@@ -39,7 +51,7 @@ export const getEventSeats = async (req, res) => {
           return {
             ...seat,
             status: 'locked',
-            lockedByMe: lockVal === userId // Highlight user's own lock
+          lockedByMe: userId ? lockVal === userId : false // Highlight user's own lock
           };
         }
         return { ...seat, status: 'available' };

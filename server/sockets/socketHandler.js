@@ -8,7 +8,12 @@ export const initializeSocket = (io) => {
   // io.use() middleware — verify JWT from handshake
   io.use((socket, next) => {
     try {
-      const token = socket.handshake.auth?.token;
+      // Extract token from HttpOnly cookies sent via withCredentials
+      const cookies = socket.handshake.headers.cookie;
+      const token = cookies
+        ? cookies.split('; ').find(row => row.startsWith('accessToken='))?.split('=')[1]
+        : socket.handshake.auth?.token; // Fallback
+
       if (!token) return next(new Error('Authentication error: No token provided'));
 
       const decoded = verifyAccess(token);

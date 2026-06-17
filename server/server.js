@@ -21,7 +21,14 @@ const httpServer = http.createServer(app);
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', process.env.CLIENT_URL];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json());
@@ -30,7 +37,14 @@ app.use(cookieParser());
 // Socket.io Setup
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', process.env.CLIENT_URL];
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST'],
     credentials: true,
   }

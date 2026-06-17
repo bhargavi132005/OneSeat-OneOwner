@@ -4,8 +4,9 @@ import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/', protect, getEvents);
-router.get('/:id', protect, getEventById);
-router.get('/:id/seats', protect, getEventSeats);
+// Events should be publicly accessible
+router.get('/', getEvents);
+router.get('/:id', getEventById);
+router.get('/:id/seats', getEventSeats);
 
 export default router;
