@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import MainLayout from './layouts/MainLayout'
 import Home from './pages/Home'
 import EventDetail from './pages/EventDetail'
+import Events from './pages/Events'
 import Checkout from './pages/Checkout'
 import MyBookings from './pages/MyBookings'
 import Login from './pages/Login'
@@ -24,6 +25,7 @@ function AppRoutes() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/events/:id" element={<EventDetail />} />
+          <Route path="/events" element={<Events />} />
           
           <Route
             path="/checkout"

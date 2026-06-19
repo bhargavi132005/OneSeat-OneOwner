@@ -22,7 +22,10 @@ export default function Navbar() {
   const navItems = [
     { name: 'Home', path: '/', icon: Home },
     ...(isAuthenticated ? [{ name: 'My Bookings', path: '/bookings', icon: Bookmark }] : []),
+    { name: 'Events', path: '/events', icon: Search },
   ]
+
+  const [searchQuery, setSearchQuery] = useState('')
 
   const handleLogout = () => {
     logout?.()
@@ -54,7 +57,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-6">
           {navItems.map(({ name, path, icon: Icon }) => (
             <Link
               key={path}
@@ -69,6 +72,29 @@ export default function Navbar() {
               {name}
             </Link>
           ))}
+          {/* Events Search */}
+          <div className="flex items-center gap-2">
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  navigate({ pathname: '/events', search: `?q=${encodeURIComponent(searchQuery)}` })
+                }
+              }}
+              placeholder="Search events..."
+              className="bg-white/5 text-sm text-gray-200 placeholder-gray-500 px-3 py-2 rounded-lg w-64 focus:outline-none"
+            />
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => navigate({ pathname: '/events', search: `?q=${encodeURIComponent(searchQuery)}` })}
+              className="p-2 bg-purple-600/20 rounded-lg text-purple-300"
+              aria-label="Search events"
+            >
+              <Search size={18} />
+            </motion.button>
+          </div>
         </div>
 
         {/* Desktop Auth Buttons */}
