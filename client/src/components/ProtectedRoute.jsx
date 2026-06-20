@@ -1,8 +1,8 @@
 import { Navigate } from 'react-router-dom'
 import LoadingSpinner from './LoadingSpinner'
 
-export default function ProtectedRoute({ children, isAuthenticated }) {
-  if (isAuthenticated === undefined) {
+export default function ProtectedRoute({ children, isAuthenticated, loading }) {
+  if (loading) {
     return <LoadingSpinner />
   }
 

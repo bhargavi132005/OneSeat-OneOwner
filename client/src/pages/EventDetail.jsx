@@ -24,6 +24,7 @@ export default function EventDetail() {
   const [error, setError] = useState(null)
   const [lockTime, setLockTime] = useState(null)
   const [isLocking, setIsLocking] = useState(false)
+  const [showSeatBooking, setShowSeatBooking] = useState(false)
 
   useEffect(() => {
     fetchEventDetail()
@@ -65,7 +66,7 @@ export default function EventDetail() {
     // Case 1: Deselecting the currently selected seat
     if (selectedSeats.includes(seatId)) {
       try {
-        if (releaseSeat) releaseSeat(seatId);
+        await api.post(`/seats/${seatId}/release`, { eventId: id });
         setSelectedSeats(prev => {
           const newSeats = prev.filter(id => id !== seatId);
           if (newSeats.length === 0) setLockTime(null);
@@ -73,6 +74,7 @@ export default function EventDetail() {
         });
       } catch (err) {
         console.error("Failed to release seat:", err);
+        alert(err.response?.data?.message || "Could not release this seat.");
       } finally {
         setIsLocking(false);
       }
@@ -184,99 +186,146 @@ export default function EventDetail() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Seat Map */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-2"
-          >
-            <SeatMap
-              seats={displaySeats}
-              selectedSeats={selectedSeats}
-              onSeatSelect={handleSeatSelect}
-            />
-          </motion.div>
+        {/* Description Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card-glass rounded-xl p-8 mb-10"
+        >
+          <h2 className="text-2xl font-bold text-white mb-4">About the Event</h2>
+          <p className="text-gray-300 leading-relaxed mb-6 whitespace-pre-line text-lg">
+            {event.description || "No description available for this event."}
+          </p>
 
-          {/* Summary Sidebar */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="sticky top-24 h-fit card-glass rounded-xl p-6"
-          >
-            {/* Lock Timer */}
-            {lockTime && selectedSeats.length > 0 && (
-              <div className="mb-8">
-                <LockTimer lockTime={lockTime} />
-              </div>
-            )}
-
-            {/* Selected Seats */}
-            <div className="mb-6">
-              <h3 className="font-bold text-white mb-3">Selected Seats</h3>
-              {selectedSeats.length > 0 ? (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {selectedSeats.map(seatId => (
-                    <motion.span
-                      key={seatId}
-                      whileHover={{ scale: 1.1 }}
-                      className="px-3 py-1 bg-purple-600/30 border border-purple-500 rounded-lg text-sm text-purple-300 font-mono"
-                    >
-                      {seats.find(s => s._id === seatId)?.label || seatId}
-                    </motion.span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-sm">No seats selected</p>
-              )}
+          <div className="flex flex-wrap gap-6 text-gray-400 text-sm border-t border-white/10 pt-6">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-purple-400">Place / Venue:</span> {event.place || event.venue}
             </div>
-
-            {/* Divider */}
-            <div className="border-t border-white/10 my-6" />
-
-            {/* Pricing */}
-            <div className="space-y-3 mb-6">
-              <div className="flex justify-between text-gray-400">
-                <span>Subtotal ({selectedSeats.length}x)</span>
-                <span>{formatCurrency(pricing.subtotal)}</span>
-              </div>
-              <div className="flex justify-between text-gray-400">
-                <span>Convenience Fee</span>
-                <span>{formatCurrency(pricing.convenienceFee)}</span>
-              </div>
-              <div className="flex justify-between text-gray-400">
-                <span>Taxes & Charges</span>
-                <span>{formatCurrency(pricing.tax)}</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-purple-400">Date & Time:</span> {formatDate(event.date)}
             </div>
-
-            {/* Total */}
-            <div className="border-t border-white/10 pt-4 mb-6">
-              <div className="flex justify-between items-center">
-                <span className="text-white font-bold">Total Amount</span>
-                <span className="text-2xl font-bold text-purple-400">
-                  {formatCurrency(pricing.total)}
-                </span>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-purple-400">Price per Seat:</span> {formatCurrency(event.price || event.startingPrice)}
             </div>
+          </div>
 
-            {/* Checkout Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleCheckout}
-              disabled={selectedSeats.length === 0}
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-lg font-bold hover:shadow-glow transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          {!showSeatBooking && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="mt-8 text-center"
             >
-              <ShoppingCart size={20} />
-              Proceed to Checkout
-            </motion.button>
+              <button
+                onClick={() => setShowSeatBooking(true)}
+                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-xl font-bold text-lg hover:shadow-glow transition-all active:scale-95"
+              >
+                Proceed to Seat Selection
+              </button>
+            </motion.div>
+          )}
+        </motion.div>
 
-            <p className="text-xs text-gray-500 text-center mt-4">
-              Seats will be automatically released after 5 minutes
-            </p>
+        {showSeatBooking && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-12"
+          >
+            {/* Seat Map */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="lg:col-span-2"
+            >
+              <SeatMap
+                seats={displaySeats}
+                selectedSeats={selectedSeats}
+                onSeatSelect={handleSeatSelect}
+              />
+            </motion.div>
+
+            {/* Summary Sidebar */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="sticky top-24 h-fit card-glass rounded-xl p-6"
+            >
+              {/* Lock Timer */}
+              {lockTime && selectedSeats.length > 0 && (
+                <div className="mb-8">
+                  <LockTimer lockTime={lockTime} />
+                </div>
+              )}
+
+              {/* Selected Seats */}
+              <div className="mb-6">
+                <h3 className="font-bold text-white mb-3">Selected Seats</h3>
+                {selectedSeats.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {selectedSeats.map(seatId => (
+                      <motion.span
+                        key={seatId}
+                        whileHover={{ scale: 1.1 }}
+                        className="px-3 py-1 bg-purple-600/30 border border-purple-500 rounded-lg text-sm text-purple-300 font-mono"
+                      >
+                        {seats.find(s => s._id === seatId)?.label || seatId}
+                      </motion.span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">No seats selected</p>
+                )}
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-white/10 my-6" />
+
+              {/* Pricing */}
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between text-gray-400">
+                  <span>Subtotal ({selectedSeats.length}x)</span>
+                  <span>{formatCurrency(pricing.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-gray-400">
+                  <span>Convenience Fee</span>
+                  <span>{formatCurrency(pricing.convenienceFee)}</span>
+                </div>
+                <div className="flex justify-between text-gray-400">
+                  <span>Taxes & Charges</span>
+                  <span>{formatCurrency(pricing.tax)}</span>
+                </div>
+              </div>
+
+              {/* Total */}
+              <div className="border-t border-white/10 pt-4 mb-6">
+                <div className="flex justify-between items-center">
+                  <span className="text-white font-bold">Total Amount</span>
+                  <span className="text-2xl font-bold text-purple-400">
+                    {formatCurrency(pricing.total)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Checkout Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleCheckout}
+                disabled={selectedSeats.length === 0}
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-lg font-bold hover:shadow-glow transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <ShoppingCart size={20} />
+                Proceed to Checkout
+              </motion.button>
+
+              <p className="text-xs text-gray-500 text-center mt-4">
+                Seats will be automatically released after 5 minutes
+              </p>
+            </motion.div>
           </motion.div>
-        </div>
+        )}
       </div>
     </div>
   )

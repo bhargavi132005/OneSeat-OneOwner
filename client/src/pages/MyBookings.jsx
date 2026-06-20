@@ -103,14 +103,25 @@ export default function MyBookings() {
             >
               {/* Card Header */}
               <div className="relative h-40 overflow-hidden bg-gradient-to-br from-purple-600 to-blue-600">
-                <motion.div
-                  initial={{ scale: 1.2 }}
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute inset-0 bg-gradient-to-br from-purple-600/50 to-blue-600/50 flex items-center justify-center"
-                >
-                  <Ticket size={64} className="text-white/30" />
-                </motion.div>
+                {booking.eventImage ? (
+                  <motion.img
+                    src={booking.eventImage}
+                    alt={booking.eventTitle}
+                    className="w-full h-full object-cover"
+                    initial={{ scale: 1.1 }}
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                ) : (
+                  <motion.div
+                    initial={{ scale: 1.2 }}
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0 bg-gradient-to-br from-purple-600/50 to-blue-600/50 flex items-center justify-center"
+                  >
+                    <Ticket size={64} className="text-white/30" />
+                  </motion.div>
+                )}
 
                 {/* Status Badge */}
                 <div className="absolute top-3 right-3 px-3 py-1 bg-green-600/80 backdrop-blur-sm rounded-full text-xs font-bold text-white">

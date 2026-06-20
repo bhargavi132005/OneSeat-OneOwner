@@ -27,13 +27,13 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password })
-    setUser(data.user)
+    setUser(data.user || data)
     setIsAuthenticated(true)
   }
 
   const register = async (name, email, password) => {
     const { data } = await api.post('/auth/register', { name, email, password })
-    setUser(data.user)
+    setUser(data.user || data)
     setIsAuthenticated(true)
   }
 

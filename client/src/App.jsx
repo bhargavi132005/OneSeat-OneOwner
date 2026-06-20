@@ -11,10 +11,15 @@ import MyBookings from './pages/MyBookings'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import CommandPalette from './components/CommandPalette'
+import LoadingSpinner from './components/LoadingSpinner'
 import { useContext } from 'react'
 
 function AppRoutes() {
-  const { isAuthenticated } = useContext(AuthContext) || {}
+  const { isAuthenticated, loading } = useContext(AuthContext) || {}
+
+  if (loading) {
+    return <LoadingSpinner />
+  }
 
   return (
     <>
@@ -30,7 +35,7 @@ function AppRoutes() {
           <Route
             path="/checkout"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isAuthenticated={isAuthenticated} loading={loading}>
                 <Checkout />
               </ProtectedRoute>
             }
@@ -38,7 +43,7 @@ function AppRoutes() {
           <Route
             path="/bookings"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isAuthenticated={isAuthenticated} loading={loading}>
                 <MyBookings />
               </ProtectedRoute>
             }
