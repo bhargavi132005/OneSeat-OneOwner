@@ -1,5 +1,5 @@
 import Seat from '../models/Seat.js';
-import { acquireLock } from '../utils/lockManager.js';
+import { acquireLock, releaseLock } from '../utils/lockManager.js';
 import { getIO } from '../config/socket.js';
 
 export const lockSeat = async (req, res) => {
@@ -37,6 +37,33 @@ export const lockSeat = async (req, res) => {
     const LOCK_TTL_SECONDS = 300; // 5 minutes, matching lockManager.js
     const expiresAt = new Date(Date.now() + LOCK_TTL_SECONDS * 1000);
     return res.status(200).json({ success: true, expiresAt, seatLabel: seat.label });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const releaseSeat = async (req, res) => {
+  try {
+    const { seatId } = req.params;
+    const { eventId } = req.body;
+    const userId = req.user.id;
+
+    // Verify seat exists and belongs to the event
+    const seat = await Seat.findById(seatId);
+    if (!seat || seat.eventId.toString() !== eventId) {
+      return res.status(404).json({ message: 'Seat not found or event mismatch' });
+    }
+
+    // Call releaseLock() from lockManager.js
+    const released = await releaseLock(eventId, seatId, userId);
+    if (!released) {
+      return res.status(400).json({ message: 'Could not release lock (either not locked by you or already expired)' });
+    }
+
+    // Emit 'seat:available' to Socket.io room event:{eventId}
+    getIO().to(`event:${eventId}`).emit('seat:available', { seatId });
+
+    return res.status(200).json({ success: true, message: 'Seat released successfully' });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
