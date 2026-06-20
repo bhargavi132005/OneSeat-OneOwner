@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import Event from '../models/Event.js';
 import Seat from '../models/Seat.js';
+import Booking from '../models/Booking.js';
 
 // Resolve the path to the root .env file
 const __filename = fileURLToPath(import.meta.url);
@@ -18,7 +19,8 @@ const seedDB = async () => {
     // Clear existing data to prevent duplicates
     await Event.deleteMany();
     await Seat.deleteMany();
-    console.log('Cleared existing events and seats!');
+    await Booking.deleteMany();
+    console.log('Cleared existing events, seats, and bookings!');
 
     // 1. Create Events
     const events = [
@@ -31,7 +33,8 @@ const seedDB = async () => {
         totalSeats: 50,
         availableSeats: 50,
         price: 5000,
-        posterUrl: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1000&auto=format&fit=crop'
+        posterUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1000&auto=format&fit=crop',
+        description: 'Experience the magic of Coldplay\'s Music of the Spheres World Tour live at Wembley Stadium. Featuring spectacular lights, laser shows, and their greatest hits, this concert is designed to be a fully immersive sensory experience. Sing along to anthems like "Yellow", "Fix You", and "Viva La Vida" under a sky filled with biodegradable confetti and glowing LED wristbands. Join thousands of fans for an unforgettable evening of joy, music, and sustainability.'
       },
       {
         title: 'Ed Sheeran - Mathematics Tour',
@@ -42,7 +45,8 @@ const seedDB = async () => {
         totalSeats: 96,
         availableSeats: 96,
         price: 4000,
-        posterUrl: 'https://images.unsplash.com/photo-1540039155732-d68814a92b0c?q=80&w=1000&auto=format&fit=crop'
+        posterUrl: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1000&auto=format&fit=crop',
+        description: 'Join Ed Sheeran for his record-breaking Mathematics (+-=÷x) Tour at The O2 Arena. Watch him perform from a stunning 360-degree revolving stage surrounded by giant guitar picks and screens. Using his signature loop station, Ed will build every track completely live right before your eyes. Enjoy a spectacular setlist featuring brand new tracks alongside fan favorites like "Shape of You", "Perfect", and "Thinking Out Loud".'
       },
       {
         title: 'Taylor Swift - The Eras Tour',
@@ -53,7 +57,8 @@ const seedDB = async () => {
         totalSeats: 150,
         availableSeats: 150,
         price: 8000,
-        posterUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1000&auto=format&fit=crop'
+        posterUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=1000&auto=format&fit=crop',
+        description: 'Witness the legendary Eras Tour by Taylor Swift at Wembley Stadium. This three-hour-plus musical masterpiece is a chronological journey celebrating all of her iconic musical eras. Complete with theatrical sets, dozens of gorgeous costume changes, and top-tier dancers, it is the highest-grossing concert tour of all time. Secure your seats to witness this historic pop-culture phenomenon live.'
       }
     ];
 
