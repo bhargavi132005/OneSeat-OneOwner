@@ -56,7 +56,7 @@ export default function Home() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 pt-20">
+      <section className="pt-32 pb-16 flex items-center justify-center relative overflow-hidden px-4">
         {/* Background Animation */}
         <div className="absolute inset-0 opacity-30">
           <motion.div
@@ -76,7 +76,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-center mb-16"
+            className="text-center mb-6"
           >
             <h1 className="text-5xl md:text-7xl font-bold mb-6 gradient-text leading-tight">
               Book the Best Seats Before They're Gone
@@ -98,22 +98,40 @@ export default function Home() {
               </a>
             </motion.div>
           </motion.div>
+        </div>
+      </section>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 0.1 }}
-                className="text-center"
-              >
-                <h3 className="text-4xl font-bold text-purple-400 mb-2">{stat.label}</h3>
-                <p className="text-gray-400">{stat.description}</p>
-              </motion.div>
-            ))}
-          </div>
+      {/* Events Section */}
+      <section id="events" className="py-16 px-4">
+        <div className="max-w-7xl mx-auto">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-4xl font-bold mb-12 gradient-text text-center md:text-left"
+          >
+            Featured Events
+          </motion.h2>
+
+          {error ? (
+            <ErrorState message={error} onRetry={fetchEvents} />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {loading
+                ? Array(8).fill(0).map((_, i) => <SkeletonCard key={i} />)
+                : events.slice(0, 8).map((event, i) => (
+                    <motion.div
+                      key={event._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <EventCard event={event} />
+                    </motion.div>
+                  ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -157,37 +175,24 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Events Section */}
-      <section id="events" className="py-20 px-4">
+      {/* Stats Section */}
+      <section className="py-20 px-4 border-t border-white/5 bg-purple-950/10">
         <div className="max-w-7xl mx-auto">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-4xl font-bold mb-12 gradient-text"
-          >
-            Featured Events
-          </motion.h2>
-
-          {error ? (
-            <ErrorState message={error} onRetry={fetchEvents} />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {loading
-                ? Array(8).fill(0).map((_, i) => <SkeletonCard key={i} />)
-                : events.slice(0, 8).map((event, i) => (
-                    <motion.div
-                      key={event._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.05 }}
-                    >
-                      <EventCard event={event} />
-                    </motion.div>
-                  ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {stats.map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="text-center card-glass p-8 rounded-xl"
+              >
+                <h3 className="text-4xl font-bold text-purple-400 mb-2">{stat.label}</h3>
+                <p className="text-gray-400">{stat.description}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
     </div>
